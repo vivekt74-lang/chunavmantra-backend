@@ -6,16 +6,16 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import pool from './db.js';
 import dotenv from 'dotenv';
-import { errorHandler } from '../middleware/errorHandler.js';
-import { logger } from '../utils/logger.js';
+import { errorHandler } from '../src/middleware/errorHandler.js';
+import { logger } from '../src/utils/logger.js';
 
 // Routes
-import stateRoutes from '../routes/states.routes.js';
-import constituencyRoutes from '../routes/constituencies.routes.js';
-import electionRoutes from '../routes/elections.routes.js';
-import boothRoutes from '../routes/booths.routes.js';
-import candidateRoutes from '../routes/candidates.routes.js';
-import boothAnalysisRoutes from '../routes/booth-analysis.routes.js'
+import stateRoutes from './routes/states.routes.js';
+import constituencyRoutes from './routes/constituencies.routes.js';
+import electionRoutes from './routes/elections.routes.js';
+import boothRoutes from './routes/booths.routes.js';
+import candidateRoutes from './routes/candidates.routes.js';
+import boothAnalysisRoutes from './routes/booth-analysis.routes.js'
 
 // Load environment variables FIRST
 dotenv.config();

@@ -1,6 +1,6 @@
 // backend/routes/booth-analysis.routes.ts - COMPLETELY FIXED
 import { Router } from 'express';
-import pool from '../src/db.js';
+import pool from '../db.js';
 import { logger } from '../utils/logger.js';
 import { AppError } from '../middleware/errorHandler.js';
 
