@@ -10,12 +10,12 @@ import { errorHandler } from '../src/middleware/errorHandler.js';
 import { logger } from '../src/utils/logger.js';
 
 // Routes
-import stateRoutes from './routes/states.routes.js';
-import constituencyRoutes from './routes/constituencies.routes.js';
-import electionRoutes from './routes/elections.routes.js';
-import boothRoutes from './routes/booths.routes.js';
-import candidateRoutes from './routes/candidates.routes.js';
-import boothAnalysisRoutes from './routes/booth-analysis.routes.js'
+import stateRoutes from '../src/routes/states.routes.js';
+import constituencyRoutes from '../src/routes/constituencies.routes.js';
+import electionRoutes from '../src/routes/elections.routes.js';
+import boothRoutes from '../src/routes/booths.routes.js';
+import candidateRoutes from '../src/routes/candidates.routes.js';
+import boothAnalysisRoutes from '../src/routes/booth-analysis.routes.js'
 
 // Load environment variables FIRST
 dotenv.config();
