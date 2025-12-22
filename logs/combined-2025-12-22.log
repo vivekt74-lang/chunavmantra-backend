@@ -5,3 +5,10 @@
 2025-12-22 16:36:53 info: 🌍 Frontend URL: http://localhost:8080,http://localhost:5173
 2025-12-22 16:36:53 info: 🌍 CORS Allowed Origins: http://localhost:8080, http://localhost:5173
 2025-12-22 16:36:53 info: 📝 Log level: info
+2025-12-22 17:43:06 error: Missing required environment variables: DATABASE_URL
+2025-12-22 17:43:06 info: 🚀 Server running on port 5000 in development mode
+2025-12-22 17:43:06 info: 📊 Health check: http://localhost:5000/health
+2025-12-22 17:43:06 info: 🔗 API Base URL: http://localhost:5000/api
+2025-12-22 17:43:06 info: 🌍 Frontend URL: http://localhost:8080,http://localhost:5173
+2025-12-22 17:43:06 info: 🌍 CORS Allowed Origins: http://localhost:8080, http://localhost:5173
+2025-12-22 17:43:06 info: 📝 Log level: info

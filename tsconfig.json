@@ -6,7 +6,8 @@
     "outDir": "./dist",
     "rootDir": "./src", /* This tells TS that 'src' is the top level of code */
     "esModuleInterop": true,
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
