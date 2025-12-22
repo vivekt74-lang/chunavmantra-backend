@@ -9,7 +9,10 @@
     "strict": false,
     "noImplicitAny": false,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": [
+      "node"
+    ],
   },
   "include": [
     "src/**/*"
