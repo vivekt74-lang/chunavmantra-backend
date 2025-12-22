@@ -3,14 +3,12 @@
     "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    /* Crucial Paths */
-    "rootDir": "src",
-    "outDir": "dist",
-    /* Module Interop */
+    "outDir": "./dist",
+    "rootDir": "./src",
     "esModuleInterop": true,
+    "strict": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "src/**/*"
