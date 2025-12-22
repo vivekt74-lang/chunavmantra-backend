@@ -4,7 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./src", /* This tells TS that 'src' is the top level of code */
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
@@ -15,7 +15,6 @@
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts"
+    "dist"
   ]
 }
