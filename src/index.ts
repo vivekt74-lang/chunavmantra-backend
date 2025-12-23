@@ -96,21 +96,18 @@ app.use(helmet(helmetConfig as any)); // Type assertion for Helmet options
 
 // FIXED CORS CONFIGURATION - ADD 8080
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true); // SSR / health checks
+    origin: (origin: string | undefined, callback: Function) => {
+        if (!origin) return callback(null, true); // health checks, SSR
 
-        const allowed = process.env.FRONTEND_URL
-            ?.split(',')
-            .map(o => o.trim());
-
-        if (allowed?.includes(origin)) {
+        if (ALLOWED_ORIGINS.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true,
 };
+
 
 
 // Apply CORS middleware
@@ -329,7 +326,7 @@ if (process.env.NODE_ENV !== 'test') {
         logger.info(`📊 Health check: http://localhost:${PORT}/health`);
         logger.info(`🔗 API Base URL: http://localhost:${PORT}/api`);
         logger.info(`🌍 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-        logger.info(`🌍 CORS Allowed Origins: ${corsOptions.origin.join(', ')}`);
+        logger.info(`🌍 CORS Allowed Origins: ${ALLOWED_ORIGINS.join(', ')}`);
         logger.info(`📝 Log level: ${process.env.LOG_LEVEL || 'info'}`);
     });
 
