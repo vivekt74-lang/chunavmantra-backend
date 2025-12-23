@@ -26,10 +26,12 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
 
 // Validate required environment variables
-const requiredEnvVars = ['DATABASE_URL'];
+const requiredEnvVars: string[] = [];
+
 if (isProduction) {
-    requiredEnvVars.push('FRONTEND_URL');
+    requiredEnvVars.push('DATABASE_URL', 'FRONTEND_URL');
 }
+
 
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 if (missingEnvVars.length > 0) {
@@ -49,7 +51,11 @@ const getHelmetConfig = () => {
             scriptSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "https:"],
             fontSrc: ["'self'", "https:"],
-            connectSrc: ["'self'", process.env.FRONTEND_URL?.split(',')[0] || 'http://localhost:5173'],
+            connectSrc: [
+                "'self'",
+                ...process.env.FRONTEND_URL.split(','),
+                "https://*.onrender.com"
+            ],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
@@ -90,15 +96,22 @@ app.use(helmet(helmetConfig as any)); // Type assertion for Helmet options
 
 // FIXED CORS CONFIGURATION - ADD 8080
 const corsOptions = {
-    origin: process.env.FRONTEND_URL
-        ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
-        : ['http://localhost:8080', 'http://localhost:5173'], // ADDED 8080
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-    credentials: true,
-    maxAge: 86400, // 24 hours in seconds
-    optionsSuccessStatus: 204
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true); // SSR / health checks
+
+        const allowed = process.env.FRONTEND_URL
+            ?.split(',')
+            .map(o => o.trim());
+
+        if (allowed?.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
 };
+
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
@@ -208,9 +221,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     const allowedOrigins = ['http://localhost:8080', 'http://localhost:5173'];
     const origin = req.headers.origin;
 
-    if (origin && allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-    }
 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
