@@ -24,6 +24,18 @@ const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
+// ===== Allowed Origins (Single Source of Truth) =====
+const ALLOWED_ORIGINS: string[] = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
+    : [];
+
+if (!isProduction && ALLOWED_ORIGINS.length === 0) {
+    ALLOWED_ORIGINS.push(
+        'http://localhost:5173',
+        'http://localhost:8080'
+    );
+}
+
 
 // Validate required environment variables
 const requiredEnvVars: string[] = [];
@@ -53,7 +65,7 @@ const getHelmetConfig = () => {
             fontSrc: ["'self'", "https:"],
             connectSrc: [
                 "'self'",
-                ...process.env.FRONTEND_URL.split(','),
+                ...ALLOWED_ORIGINS,
                 "https://*.onrender.com"
             ],
             objectSrc: ["'none'"],
@@ -95,18 +107,20 @@ const helmetConfig = getHelmetConfig();
 app.use(helmet(helmetConfig as any)); // Type assertion for Helmet options
 
 // FIXED CORS CONFIGURATION - ADD 8080
-const corsOptions = {
-    origin: (origin: string | undefined, callback: Function) => {
-        if (!origin) return callback(null, true); // health checks, SSR
+const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true); // health, SSR, curl
 
         if (ALLOWED_ORIGINS.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+            return callback(null, true);
         }
+
+        logger.warn(`Blocked by CORS: ${origin}`);
+        return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
 };
+
 
 
 
@@ -214,15 +228,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     // Set Permissions-Policy (Feature-Policy)
     res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
-    // ADD MANUAL CORS HEADERS AS BACKUP
-    const allowedOrigins = ['http://localhost:8080', 'http://localhost:5173'];
-    const origin = req.headers.origin;
 
-
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Max-Age', '86400');
 
     next();
 });
@@ -238,9 +244,10 @@ app.get('/health', (req: Request, res: Response) => {
         version: process.env.npm_package_version || '1.0.0',
         nodeVersion: process.version,
         cors: {
-            allowedOrigins: corsOptions.origin,
-            frontendUrl: process.env.FRONTEND_URL
+            allowedOrigins: ALLOWED_ORIGINS,
+            frontendUrl: process.env.FRONTEND_URL || null
         }
+
     };
 
     res.status(200).json(healthCheck);
