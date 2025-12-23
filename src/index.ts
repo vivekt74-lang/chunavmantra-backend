@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import pool from './db.js';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler.js';
-import { logger } from '../src/utils/logger.js';
+import { logger } from './utils/logger.js';
 
 // Routes
 import stateRoutes from './routes/states.routes.js';
