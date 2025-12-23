@@ -15,7 +15,6 @@ router.get('/test', (req, res) => {
     });
 });
 
-// 1. FIXED: Booth Analysis for Constituency
 router.get('/constituency/:acId/booth-analysis', async (req, res, next) => {
     try {
         const { acId } = req.params;
@@ -23,7 +22,7 @@ router.get('/constituency/:acId/booth-analysis', async (req, res, next) => {
 
         console.log(`Analyzing booths for constituency ${acId}`);
 
-        // FIXED: Simplified query without nested aggregates
+        // FIXED: Simplified query without the problematic p2 reference
         const analysisQuery = await pool.query(`
             WITH booth_stats AS (
                 SELECT 
@@ -60,37 +59,52 @@ router.get('/constituency/:acId/booth-analysis', async (req, res, next) => {
                     WHERE br2.booth_id = br.booth_id
                     AND br2.election_id = $2
                 )
+            ),
+            booth_top_parties AS (
+                SELECT 
+                    br.booth_id,
+                    p.party_name,
+                    SUM(br.votes_secured) as votes
+                FROM booth_results br
+                JOIN candidates c ON br.candidate_id = c.candidate_id
+                JOIN parties p ON c.party_id = p.party_id
+                WHERE br.election_id = $2
+                GROUP BY br.booth_id, p.party_name
+            ),
+            ranked_parties AS (
+                SELECT 
+                    booth_id,
+                    party_name,
+                    votes,
+                    ROW_NUMBER() OVER (PARTITION BY booth_id ORDER BY votes DESC) as rank
+                FROM booth_top_parties
+            ),
+            top_three_parties AS (
+                SELECT 
+                    booth_id,
+                    json_agg(
+                        json_build_object(
+                            'party_name', party_name,
+                            'votes', votes,
+                            'percentage', ROUND((votes * 100.0 / (
+                                SELECT total_votes_cast 
+                                FROM booth_stats bs 
+                                WHERE bs.booth_id = ranked_parties.booth_id
+                            ))::numeric, 2)
+                        ) ORDER BY votes DESC
+                    ) as top_parties
+                FROM ranked_parties
+                WHERE rank <= 3
+                GROUP BY booth_id
             )
             SELECT 
                 bs.*,
                 bw.winning_party,
                 bw.winning_votes,
-                -- Get top 3 parties for each booth
-                (
-                    SELECT json_agg(json_build_object(
-                        'party_name', p2.party_name,
-                        'votes', sub.votes,
-                        'percentage', CASE 
-                            WHEN bs.total_votes_cast > 0 
-                            THEN ROUND((sub.votes * 100.0 / bs.total_votes_cast)::numeric, 2)
-                            ELSE 0 
-                        END
-                    ) ORDER BY sub.votes DESC)
-                    FROM (
-                        SELECT 
-                            p2.party_name,
-                            SUM(br2.votes_secured) as votes
-                        FROM booth_results br2
-                        JOIN candidates c2 ON br2.candidate_id = c2.candidate_id
-                        JOIN parties p2 ON c2.party_id = p2.party_id
-                        WHERE br2.booth_id = bs.booth_id AND br2.election_id = $2
-                        GROUP BY p2.party_name
-                        ORDER BY SUM(br2.votes_secured) DESC
-                        LIMIT 3
-                    ) sub
-                ) as top_parties
+                COALESCE(tp.top_parties, '[]'::json) as top_parties
             FROM booth_stats bs
             LEFT JOIN booth_winners bw ON bs.booth_id = bw.booth_id
+            LEFT JOIN top_three_parties tp ON bs.booth_id = tp.booth_id
             ORDER BY bs.booth_number::integer
         `, [acId, electionId]);
 
